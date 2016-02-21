@@ -96,6 +96,7 @@ class CreditCards extends PluginBase implements Listener {
 				];
 			}
 		}
+		//여기가 적힌 플레이어들에게서 돈 뺏어오는 부분 - 아직 못만듬
 	}
 	public function onDisable() {
 		$this->saveYml ();
@@ -160,6 +161,8 @@ class CreditCards extends PluginBase implements Listener {
 						foreach ( $this->getUserHelper () as $help ) {
 							$sender->sendMessage ( Color::DARK_GREEN . "$prefix $help" );
 						}
+					//case "비용납부" : 
+						//구현 해야 하는데 귀차니즘 강림
 				}
 		}
 	}
