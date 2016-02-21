@@ -1,0 +1,14 @@
+﻿name: CreditCards
+main: CreditCards\CreditCards
+version: "1.0"
+author: JellyBrick_
+api:
+- 1.13.0
+- 1.13.1
+- 2.0.0
+
+commands:
+ 신용결제:
+  description: 신용카드로 결제하는 명령어 입니다.
+ 신용:
+  descipriton: 신용에 관한 명령어입니다.
