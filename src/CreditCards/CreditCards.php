@@ -65,10 +65,10 @@ class CreditCards extends PluginBase implements Listener {
 		$save->setAll ( $this->data );
 		$save->save ();
 	} /*
-	   * public function MessageLoad()
+	   * public function MsgLoad()
 	   * {
 	   * $this->saveResource("messages.yml");
-	   * return (new Config($this->getDataFolder()."messages.yml", Config::YAML))->getAll();
+	   * return (new Config($this->getDataFolder()."messages.yml", Config::YAML))->getAll(); //나중에 messages.yml 사용시 쓸 부분
 	   * }
 	   */
 	public function months()
