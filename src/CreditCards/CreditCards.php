@@ -18,7 +18,7 @@
 
 <?php
 
-namespace CreditCards\CreditCards;
+namespace CreditCards;
 
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
