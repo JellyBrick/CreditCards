@@ -149,7 +149,7 @@ class CreditCards extends PluginBase implements Listener {
 								"Current_payments" => $Current_payments + $amount,
 								"Overdue" => $overdue,
 						];
-						$send#FFF300#00FFFFername = $sender->getName ();
+						$sendername = $sender->getName ();
 						if ($p instanceof Player) {
 							$p->sendMessage ( Color::BLUE . "$prefix  $sendername 님이 신용카드로 $amount 만큼 결제하였습니다!" );
 						}
