@@ -15,6 +15,7 @@
 *    You should have received a copy of the GNU General Public License
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 <?php
 
 namespace CreditCards;
@@ -55,6 +56,8 @@ class CreditCards extends PluginBase implements Listener {
 		} else {
 			$this->getLogger ()->info ( Color::BLUE . "EconomyAPI 플러그인을 감지했습니다...! 플러그인을 활성화 합니다!" );
 		}
+		$server = Server::getInstance ();
+		$player = array_shift ( $args );
 		$this->monthDate();
 		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
 		$this->api = EconomyAPI::getInstance ();
@@ -146,7 +149,7 @@ class CreditCards extends PluginBase implements Listener {
 								"Current_payments" => $Current_payments + $amount,
 								"Overdue" => $overdue,
 						];
-						$sendername = $sender->getName ();
+						$send#FFF300#00FFFFername = $sender->getName ();
 						if ($p instanceof Player) {
 							$p->sendMessage ( Color::BLUE . "$prefix  $sendername 님이 신용카드로 $amount 만큼 결제하였습니다!" );
 						}
