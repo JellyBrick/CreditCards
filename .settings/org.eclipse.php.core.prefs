@@ -1,2 +1,4 @@
 eclipse.preferences.version=1
-include_path=0;/CreditCards
+include_path=0;/CREDITCARDS
+phpVersion=php5.6
+use_asp_tags_as_php=false
