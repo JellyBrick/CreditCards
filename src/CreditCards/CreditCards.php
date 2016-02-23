@@ -1,22 +1,22 @@
-/*
-*    The plugin that allows you to use your credit card in PocketMine-MP.
-*    Copyright (C) 2016  JellyBrick_
-*
-*    This program is free software: you can redistribute it and/or modify
-*    it under the terms of the GNU General Public License as published by
-*    the Free Software Foundation, either version 3 of the License, or
-*    (at your option) any later version.
-*
-*    This program is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*    GNU General Public License for more details.
-*
-*    You should have received a copy of the GNU General Public License
-*    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 <?php
+
+/*
+ * The plugin that allows you to use your credit card in PocketMine-MP.
+ * Copyright (C) 2016 JellyBrick_
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 namespace CreditCards;
 
@@ -40,13 +40,12 @@ class CreditCards extends PluginBase implements Listener {
 	public $limit_check;
 	public $overdue;
 	public $month;
-	
 	public function onEnable() {
 		$data = $this->data;
 		@mkdir ( $this->getDataFolder () );
 		$this->config = new Config ( $this->getDataFolder () . "CreditCards.yml", Config::YAML, [ 
 				"Limit" => 100000,
-				"Month" => $this->months(),
+				"Month" => $this->months (),
 				"Cards" => [ ] 
 		] );
 		$this->data = $this->config->getAll ();
@@ -58,7 +57,7 @@ class CreditCards extends PluginBase implements Listener {
 		}
 		$server = Server::getInstance ();
 		$player = array_shift ( $args );
-		$this->monthDate();
+		$this->monthDate ();
 		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
 		$this->api = EconomyAPI::getInstance ();
 		// $this->messages = $this->MessageLoad();
@@ -74,32 +73,29 @@ class CreditCards extends PluginBase implements Listener {
 	   * return (new Config($this->getDataFolder()."messages.yml", Config::YAML))->getAll(); //나중에 messages.yml 사용시 쓸 부분
 	   * }
 	   */
-	public function months()
-	{
+	public function months() {
 		date ( "n" );
 	}
-	public function monthDate()
-	{
+	public function monthDate() {
 		$overdue = $this->data ["Cards"] [$name] ["Overdue"];
-		$month = $data["Month"];
-		$mine = $this->$data["Cards"] [$player->getName ()];
-		$check_overdue = $data["Cards"] [$mine] ["Overdue"];
-		$check_limitover = $data["Cards"] [$mine] ["Current_payments"];
+		$month = $data ["Month"];
+		$mine = $this->$data ["Cards"] [$player->getName ()];
+		$check_overdue = $data ["Cards"] [$mine] ["Overdue"];
+		$check_limitover = $data ["Cards"] [$mine] ["Current_payments"];
 		if (date ( "n" ) != $month) {
-			if ($check_overdue=0) {
+			if ($check_overdue = 0) {
 				$data ["Cards"] [$mine] = [ 
-					"Current_payments" => 0,
-					"Overdue" => 0,
+						"Current_payments" => 0,
+						"Overdue" => 0 
 				];
-			}
-			else {
-				$data ["Cards"] [$mine] = [
-					"Current_payments" => 0,
-					"Overdue" => $overdue,
+			} else {
+				$data ["Cards"] [$mine] = [ 
+						"Current_payments" => 0,
+						"Overdue" => $overdue 
 				];
 			}
 		}
-		//여기가 적힌 플레이어들에게서 돈 뺏어오는 부분 - 아직 못만듬
+		// 여기가 적힌 플레이어들에게서 돈 뺏어오는 부분 - 아직 못만듬
 	}
 	public function onDisable() {
 		$this->saveYml ();
@@ -130,10 +126,10 @@ class CreditCards extends PluginBase implements Listener {
 				$limit_temp = $limit_check;
 				$overdue = $this->data ["Cards"] [$name] ["Overdue"];
 				switch ($result) {
-					case -2 :
+					case - 2 :
 						$sender->sendMessage ( Color::RED . "$prefix 오류로 인해 승인이 취소되었습니다!" );
 						break;
-					case -1 :
+					case - 1 :
 						$sender->sendMessage ( Color::RED . "$prefix $player 님은 서버에 접속한 적이 없습니다." );
 						break;
 					case $limit_check > $limit :
@@ -147,7 +143,7 @@ class CreditCards extends PluginBase implements Listener {
 						$name = strtolower ( $sender->getName () );
 						$data ["Cards"] [$name] = [ 
 								"Current_payments" => $Current_payments + $amount,
-								"Overdue" => $overdue,
+								"Overdue" => $overdue 
 						];
 						$sendername = $sender->getName ();
 						if ($p instanceof Player) {
@@ -156,23 +152,22 @@ class CreditCards extends PluginBase implements Listener {
 						break;
 				}
 			case "신용" :
-				switch ($args [0])
-				{
+				switch ($args [0]) {
 					case "결제금액" :
 						$sender->sendMessage ( Color::GREEN . "$prefix 여태까지 결제한 금액은 $Current_payments 입니다!" );
 					case "도움말" :
 						foreach ( $this->getUserHelper () as $help ) {
 							$sender->sendMessage ( Color::DARK_GREEN . "$prefix $help" );
 						}
-					//case "비용납부" : 
-						//구현 해야 하는데 귀차니즘 강림
+					// case "비용납부" :
+					// 구현 해야 하는데 귀차니즘 강림
 				}
 		}
 	}
 	public function getUserHelper() {
-		$arr = [
+		$arr = [ 
 				"/신용결제 <닉네임> <돈 양>",
-				"/신용 결제금액"
+				"/신용 결제금액" 
 		];
 		return $arr;
 	}
