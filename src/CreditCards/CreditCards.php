@@ -40,6 +40,7 @@ class CreditCards extends PluginBase implements Listener {
 	public $limit_check;
 	public $overdue;
 	public $month;
+	public $p;
 	public function onEnable() {
 		$data = $this->data;
 		@mkdir ( $this->getDataFolder () );
@@ -56,7 +57,10 @@ class CreditCards extends PluginBase implements Listener {
 			$this->getLogger ()->info ( Color::BLUE . "EconomyAPI 플러그인을 감지했습니다...! 플러그인을 활성화 합니다!" );
 		}
 		$server = Server::getInstance ();
-		$player = array_shift ( $args );
+		$p = $server->getPlayer ( $player );
+		if ($p instanceof Player) {
+			$player = $p->getName ();
+		}
 		$this->monthDate ();
 		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
 		$this->api = EconomyAPI::getInstance ();
