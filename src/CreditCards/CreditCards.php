@@ -126,10 +126,10 @@ class CreditCards extends PluginBase implements Listener {
 				$limit_temp = $limit_check;
 				$overdue = $this->data ["Cards"] [$name] ["Overdue"];
 				switch ($result) {
-					case - 2 :
+					case -2 :
 						$sender->sendMessage ( Color::RED . "$prefix 오류로 인해 승인이 취소되었습니다!" );
 						break;
-					case - 1 :
+					case -1 :
 						$sender->sendMessage ( Color::RED . "$prefix $player 님은 서버에 접속한 적이 없습니다." );
 						break;
 					case $limit_check > $limit :
