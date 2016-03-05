@@ -1,7 +1,7 @@
 ﻿name: CreditCards
 main: CreditCards\CreditCards
 version: "1.0"
-author: JellyBrick_
+author: MattPlayzMCPE!
 api:
 - 1.13.0
 - 1.13.1
