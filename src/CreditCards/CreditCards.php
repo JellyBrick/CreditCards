@@ -20,160 +20,191 @@
 
 namespace CreditCards;
 
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat as Color;
-use pocketmine\utils\Utils;
-use pocketmine\command\PluginCommand;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use onebone\economyapi\EconomyAPI;
 use pocketmine\Player;
-use pocketmine\Server;
 
-class CreditCards extends PluginBase implements Listener {
-	public $config, $data;
-	public $money;
-	public $limit;
-	public $limit_temp;
-	public $limit_check;
-	public $overdue;
-	public $month;
-	public $p;
-	public function onEnable() {
-		$data = $this->data;
-		@mkdir ( $this->getDataFolder () );
-		$this->config = new Config ( $this->getDataFolder () . "CreditCards.yml", Config::YAML, [ 
-				"Limit" => 100000,
-				"Month" => $this->months (),
-				"Cards" => [ ] 
-		] );
-		$this->data = $this->config->getAll ();
-		if (! ($this->money = $this->getServer ()->getPluginManager ()->getPlugin ( "EconomyAPI" )) and ! ($this->money = $this->getServer ()->getPluginManager ()->getPlugin ( "EconomyAPI" ))) {
-			$this->getLogger ()->info ( Color::RED . "EconomyAPI 플러그인이 없습니다... 플러그인을 비활성화 합니다" );
-			$this->getServer ()->getPluginManager ()->disablePlugin ( $this );
-		} else {
-			$this->getLogger ()->info ( Color::BLUE . "EconomyAPI 플러그인을 감지했습니다...! 플러그인을 활성화 합니다!" );
-		}
-		$server = Server::getInstance ();
-		$p = $server->getPlayer ( $player );
-		if ($p instanceof Player) {
-			$player = $p->getName ();
-		}
-		$this->monthDate ();
-		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
-		$this->api = EconomyAPI::getInstance ();
-		// $this->messages = $this->MessageLoad();
-	}
-	public function saveYml() {
-		$save = new Config ( $this->getDataFolder () . "CreditCards.yml", Config::YAML );
-		$save->setAll ( $this->data );
-		$save->save ();
-	} /*
-	   * public function MsgLoad()
-	   * {
-	   * $this->saveResource("messages.yml");
-	   * return (new Config($this->getDataFolder()."messages.yml", Config::YAML))->getAll(); //나중에 messages.yml 사용시 쓸 부분
-	   * }
-	   */
-	public function months() {
-		date ( "n" );
-	}
-	public function monthDate() {
-		$overdue = $this->data ["Cards"] [$name] ["Overdue"];
-		$month = $data ["Month"];
-		$mine = $this->$data ["Cards"] [$player->getName ()];
-		$check_overdue = $data ["Cards"] [$mine] ["Overdue"];
-		$check_limitover = $data ["Cards"] [$mine] ["Current_payments"];
-		if (date ( "n" ) != $month) {
-			if ($check_overdue = 0) {
-				$data ["Cards"] [$mine] = [ 
-						"Current_payments" => 0,
-						"Overdue" => 0 
-				];
-			} else {
-				$data ["Cards"] [$mine] = [ 
-						"Current_payments" => 0,
-						"Overdue" => $overdue 
-				];
-			}
-		}
-		// 여기가 적힌 플레이어들에게서 돈 뺏어오는 부분 - 아직 못만듬
-	}
-	public function onDisable() {
-		$this->saveYml ();
-	}
-	public function onCommand(CommandSender $sender, Command $command, $label, array $args) {
-		$data = $this->data;
-		$prefix = "[ 서버 ]";
-		$limit = $this->data ["Limit"];
-		
-		$server = Server::getInstance ();
-		$player = array_shift ( $args );
-		$amount = array_shift ( $args );
-		$p = $server->getPlayer ( $player );
-		$name = strtolower ( $sender->getName () );
-		if ($p instanceof Player) {
-			$player = $p->getName ();
-		}
-		$result = $this->api->addMoney ( $player, $amount );
-		switch ($command->getName ()) {
-			case "신용결제" :
-				if (! isset ( $args [0] )) {
-					$sender->sendMessage ( Color::RED . "$prefix /신용결제 <돈을 줄 닉네임> <돈의 양>" );
-					$sender->sendMessage ( Color::RED . "$prefix <>는 빼고 입력해주세요!" );
-					return true;
-				}
-				$Current_payments = $this->data ["Cards"] [$name] ["Current_payments"];
-				$limit_check = $amount + $Current_payments;
-				$limit_temp = $limit_check;
-				$overdue = $this->data ["Cards"] [$name] ["Overdue"];
-				switch ($result) {
-					case -2 :
-						$sender->sendMessage ( Color::RED . "$prefix 오류로 인해 승인이 취소되었습니다!" );
-						break;
-					case -1 :
-						$sender->sendMessage ( Color::RED . "$prefix $player 님은 서버에 접속한 적이 없습니다." );
-						break;
-					case $limit_check > $limit :
-						$sender->sendMessage ( Color::RED . "$prefix 한도를 초과하여 결제 할수 없습니다" );
-						break;
-					case $overdue > 1 :
-						$sender->sendMessage ( Color::RED . "$prefix 카드가 연체 되어 있어 사용이 불가능 합니다!" );
-						break;
-					case 1 :
-						$sender->sendMessage ( Color::GOLD . "$prefix $player 님에게 신용카드로 $amount 만큼 결제 하였습니다!" );
-						$name = strtolower ( $sender->getName () );
-						$data ["Cards"] [$name] = [ 
-								"Current_payments" => $Current_payments + $amount,
-								"Overdue" => $overdue 
-						];
-						$sendername = $sender->getName ();
-						if ($p instanceof Player) {
-							$p->sendMessage ( Color::BLUE . "$prefix  $sendername 님이 신용카드로 $amount 만큼 결제하였습니다!" );
-						}
-						break;
-				}
-			case "신용" :
-				switch ($args [0]) {
-					case "결제금액" :
-						$sender->sendMessage ( Color::GREEN . "$prefix 여태까지 결제한 금액은 $Current_payments 입니다!" );
-					case "도움말" :
-						foreach ( $this->getUserHelper () as $help ) {
-							$sender->sendMessage ( Color::DARK_GREEN . "$prefix $help" );
-						}
-					// case "비용납부" :
-					// 구현 해야 하는데 귀차니즘 강림
-				}
-		}
-	}
-	public function getUserHelper() {
-		$arr = [ 
-				"/신용결제 <닉네임> <돈 양>",
-				"/신용 결제금액" 
-		];
-		return $arr;
-	}
+class CreditCards extends PluginBase implements Listener
+{
+    public $config, $data;
+    public $money;
+    public $api;
+    public $prefix;
+
+    public function onEnable()
+    {
+        @mkdir($this->getDataFolder());
+        $this->config = new Config ($this->getDataFolder() . "CreditCards.yml", Config::JSON, [
+            "Prefix" => "[ 서버 ] ",
+            "Limit" => 100000,
+            "Month" => $this->getMonth(),
+            "Cards" => []
+        ]);
+        $this->data = $this->config->getAll();
+
+        $this->prefix = $this->data["Prefix"];
+
+        try {
+            $this->api = EconomyAPI::getInstance();
+            $this->getLogger()->info(Color::BLUE . "EconomyAPI 플러그인을 감지했습니다! 플러그인을 활성화합니다!");
+        } catch (\Exception $e) {
+            $this->getLogger()->info(Color::RED . "EconomyAPI 플러그인이 없습니다. 플러그인을 비활성화합니다");
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+            return;
+        }
+
+        $this->refreshDate();
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
+
+    public function saveYml()
+    {
+        $save = new Config ($this->getDataFolder() . "CreditCards.yml", Config::YAML);
+        $save->setAll($this->data);
+        $save->save();
+    }
+
+    public function getMonth()
+    {
+        date("Y/n");
+    }
+
+    public function getDate()
+    {
+        date("Y/n/j");
+    }
+
+    public function refreshDate()
+    {
+        if (($month = $this->getMonth()) !== $this->data ["Month"]) {
+            $this->data ["Month"] = $month;
+            foreach ($this->data["Cards"] as $playerName) {
+                $moneyAmount = $this->data ["Cards"] [$playerName] ["Current_payments"];
+                $result = $this->api->reduceMoney($playerName, $moneyAmount);
+                switch ($result) {
+                    case EconomyAPI::RET_INVALID :
+                    case EconomyAPI::RET_NO_ACCOUNT :
+                        break;
+                    case EconomyAPI::RET_CANCELLED :
+                        $this->data ["Cards"] [$playerName] ["Overdue"] = true;
+                        break;
+                    case EconomyAPI::RET_SUCCESS :
+                        $this->data ["Cards"] [$playerName] ["Current_payments"] = 0;
+                        $this->data ["Cards"] [$playerName] ["Overdue"] = false;
+                        return;
+                }
+            }
+        }
+    }
+
+    public function onDisable()
+    {
+        $this->saveYml();
+    }
+
+    public function onPlayerJoin(PlayerJoinEvent $event)
+    {
+        if (!isset($this->data["Cards"][$name = strtolower($event->getPlayer()->getName())]))
+            $this->data["Cards"][$name] = [
+                "Current_payments" => 0,
+                "Overdue" => false
+            ];
+    }
+
+    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
+    {
+
+        switch ($command->getName()) {
+            case "신용결제" :
+                $player = array_shift($args);
+                $amount = array_shift($args);
+                $name = strtolower($sender->getName());
+                if (!isset ($args [0])) {
+                    $sender->sendMessage(Color::RED . $this->prefix . " /신용결제 <돈을 줄 닉네임> <돈의 양>");
+                    $sender->sendMessage(Color::RED . $this->prefix . " <>는 빼고 입력해주세요!");
+                    return false;
+                }
+
+                $currentPayments = $this->data ["Cards"] [$name] ["Current_payments"];
+
+                if (($addResult = $amount + $currentPayments) > $this->data ["Limit"]) {
+                    $sender->sendMessage(Color::RED . $this->prefix . "한도를 초과하여 결제 할수 없습니다");
+                    return false;
+                } elseif ($this->data ["Cards"] [$name] ["Overdue"]) {
+                    $sender->sendMessage(Color::RED . $this->prefix . "카드가 연체 되어 있어 사용이 불가능 합니다!");
+                    return false;
+                }
+
+                $result = $this->api->addMoney($player, $amount);
+                switch ($result) {
+                    case EconomyAPI::RET_INVALID :
+                        $sender->sendMessage(Color::RED . $this->prefix . "잘못된 숫자입니다.");
+                        break;
+                    case EconomyAPI::RET_CANCELLED :
+                        $sender->sendMessage(Color::RED . $this->prefix . "요청이 거부되었습니다.");
+                        break;
+                    case EconomyAPI::RET_NO_ACCOUNT :
+                        $sender->sendMessage(Color::RED . $this->prefix . "$player 님은 서버에 접속한 적이 없습니다.");
+                        break;
+                    case EconomyAPI::RET_SUCCESS :
+                        $sender->sendMessage(Color::GOLD . $this->prefix . "$player 님에게 신용카드로 $amount 만큼 결제하였습니다!");
+                        $name = strtolower($sender->getName());
+                        $this->data ["Cards"] [$name] ["Current_payments"] = $addResult;
+
+                        $p = $this->getServer()->getPlayer($player);
+
+                        if ($p !== null || $p instanceof Player) {
+                            $p->sendMessage(Color::BLUE . $this->prefix . $sender->getName() . "님이 신용카드로 " . $amount . "만큼 결제하였습니다!");
+                        }
+                        return true;
+                }
+                return false;
+            case "신용" :
+                switch ($args [0]) {
+                    case "결제금액" :
+                        $sender->sendMessage(Color::GREEN . $this->prefix . "여태까지 결제한 금액은 " . $this->data["Cards"][strtolower($sender->getName())]["Current_payments"] . "입니다.");
+                        return true;
+                    case "도움말" :
+                        foreach ($this->getHelp() as $help) {
+                            $sender->sendMessage(Color::DARK_GREEN . $this->prefix . " $help");
+                        }
+                        return true;
+                    case "비용납부" :
+                        $playerName = strtolower($sender->getName());
+                        $moneyAmount = $this->data ["Cards"] [$playerName] ["Current_payments"];
+                        $result = $this->api->reduceMoney($playerName, $moneyAmount);
+                        switch ($result) {
+                            case EconomyAPI::RET_INVALID :
+                            case EconomyAPI::RET_NO_ACCOUNT :
+                            case EconomyAPI::RET_CANCELLED :
+                                $sender->sendMessage(Color::RED . $this->prefix . "금액 " . $moneyAmount . "의 납부가 실패했습니다.");
+                                return false;
+                            case EconomyAPI::RET_SUCCESS :
+                                $this->data ["Cards"] [$playerName] = [
+                                    "Current_payments" => 0,
+                                    "Overdue" => false
+                                ];
+                                $sender->sendMessage(Color::RED . $this->prefix . "금액 " . $moneyAmount . "의 납부가 성공했습니다.");
+                                return true;
+                        }
+                }
+        }
+        return false;
+    }
+
+    public function getHelp()
+    {
+        return [
+            "/신용결제 <닉네임> <돈 양>",
+            "/신용 결제금액"
+        ];
+    }
 }
+
 ?>
