@@ -20,6 +20,7 @@
 
 namespace CreditCards;
 
+use pocketmine\command\ConsoleCommandSender;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
@@ -39,8 +40,15 @@ class CreditCards extends PluginBase implements Listener
 
     public function onEnable()
     {
-        @mkdir($this->getDataFolder());
-        $this->config = new Config ($this->getDataFolder() . "CreditCards.yml", Config::JSON, [
+        /*
+         * Thanks by @PresentKim
+         */
+
+        if (!file_exists($dataFolder = $this->getDataFolder())) {
+            mkdir($dataFolder);
+        }
+
+        $this->config = new Config ($this->getDataFolder() . "CreditCards.json", Config::JSON, [
             "Prefix" => "[ 서버 ] ",
             "Limit" => 100000,
             "Month" => $this->getMonth(),
@@ -50,24 +58,28 @@ class CreditCards extends PluginBase implements Listener
 
         $this->prefix = $this->data["Prefix"];
 
-        try {
+        if (class_exists("\\onebone\\economyapi\\EconomyAPI")) {
             $this->api = EconomyAPI::getInstance();
-            $this->getLogger()->info(Color::BLUE . "EconomyAPI 플러그인을 감지했습니다! 플러그인을 활성화합니다!");
-        } catch (\Exception $e) {
+        } else {
             $this->getLogger()->info(Color::RED . "EconomyAPI 플러그인이 없습니다. 플러그인을 비활성화합니다");
             $this->getServer()->getPluginManager()->disablePlugin($this);
             return;
         }
 
+        $this->getLogger()->info(Color::BLUE . "EconomyAPI 플러그인을 감지했습니다! 플러그인을 활성화합니다!");
+
         $this->refreshDate();
+
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
     }
 
-    public function saveYml()
+    /**
+     * Data save method
+     */
+    public function saveJSON()
     {
-        $save = new Config ($this->getDataFolder() . "CreditCards.yml", Config::YAML);
-        $save->setAll($this->data);
-        $save->save();
+        $this->config->setAll($this->data);
+        $this->config->save();
     }
 
     public function getMonth()
@@ -105,7 +117,7 @@ class CreditCards extends PluginBase implements Listener
 
     public function onDisable()
     {
-        $this->saveYml();
+        $this->saveJSON();
     }
 
     public function onPlayerJoin(PlayerJoinEvent $event)
@@ -117,19 +129,29 @@ class CreditCards extends PluginBase implements Listener
             ];
     }
 
+    /**
+     * @param CommandSender $sender
+     * @param Command $command
+     * @param string $label
+     * @param array $args
+     * @return bool
+     */
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
     {
-
         switch ($command->getName()) {
             case "신용결제" :
-                $player = array_shift($args);
-                $amount = array_shift($args);
-                $name = strtolower($sender->getName());
                 if (!isset ($args [0])) {
                     $sender->sendMessage(Color::RED . $this->prefix . " /신용결제 <돈을 줄 닉네임> <돈의 양>");
                     $sender->sendMessage(Color::RED . $this->prefix . " <>는 빼고 입력해주세요!");
                     return false;
+                } elseif ($sender instanceof ConsoleCommandSender) {
+                    $sender->sendMessage(Color::RED . $this->prefix . "콘솔에서는 사용하실 수 없습니다.");
+                    return false;
                 }
+
+                $player = $args [0];
+                $amount = $args [1];
+                $name = strtolower($sender->getName());
 
                 $currentPayments = $this->data ["Cards"] [$name] ["Current_payments"];
 
@@ -166,6 +188,10 @@ class CreditCards extends PluginBase implements Listener
                 }
                 return false;
             case "신용" :
+                if ($sender instanceof ConsoleCommandSender) {
+                    $sender->sendMessage(Color::RED . $this->prefix . "콘솔에서는 사용하실 수 없습니다.");
+                    return false;
+                }
                 switch ($args [0]) {
                     case "결제금액" :
                         $sender->sendMessage(Color::GREEN . $this->prefix . "여태까지 결제한 금액은 " . $this->data["Cards"][strtolower($sender->getName())]["Current_payments"] . "입니다.");
